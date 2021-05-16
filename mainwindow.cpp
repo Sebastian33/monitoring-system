@@ -1,14 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
-#include <QThread>
 #include <QFile>
 
 const char *GPSRD = "+GPSRD";
 const char *GNVTG = "GNVTG";
 const char *GPGSV = "GPGSV";
 const char *GNGGA = "GNGGA";
-
 
 bool checksum(const QString& str, unsigned char sum)
 {
@@ -37,21 +35,31 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , serialPort(new QSerialPort)
     , ui(new Ui::MainWindow)
+    , buttons(parent)
 {
-    serialPort->setPortName("/dev/ttyS0");
-    serialPort->setBaudRate(QSerialPort::Baud115200);
-    if(serialPort->open(QIODevice::ReadWrite))
-    {
-        connect(serialPort, &QSerialPort::readyRead, this, &MainWindow::handleReadyRead);
-        serialPort->write("AT+GPS=1\r\n");
-        serialPort->write("AT+GPSRD=5\r\n");
-    }
-    else
-    {
-        qInfo("Couldn't open the port\n");
-    }
+//    serialPort->setPortName("/dev/ttyS0");
+//    serialPort->setBaudRate(QSerialPort::Baud115200);
+//    if(serialPort->open(QIODevice::ReadWrite))
+//    {
+//        connect(serialPort, &QSerialPort::readyRead, this, &MainWindow::handleReadyRead);
+//        serialPort->write("AT+GPS=1\r\n");
+//        serialPort->write("AT+GPSRD=5\r\n");
+//    }
+//    else
+//    {
+//        qInfo("Couldn't open the port\n");
+//        return;
+//    }
     file = new QFile("out");
     file->open(QIODevice::WriteOnly|QIODevice::Text);
+
+    if(buttons.getCode() & ERROR_CODE)
+    {
+        return;
+    }
+    connect(&buttons, &ButtonsThread::push, this, &MainWindow::handleButtonPush);
+    connect(&buttons, &ButtonsThread::longPush, this, &MainWindow::handleButtonLongPush);
+    buttons.start();
     ui->setupUi(this);
 }
 
@@ -66,7 +74,7 @@ void MainWindow::handleReadyRead()
 
     if(qstrncmp(readData, GPSRD, qstrlen(GPSRD)) == 0)
     {
-        if(!readData.contains(GNVTG))
+        if(!readData.contains(GNVTG)) //GNVTG is the last line
             return;
         QString rawData = QString(readData).remove(0, 7); // remove +GPRSD
         parseGPSData(rawData);
@@ -95,6 +103,7 @@ MainWindow::~MainWindow()
         serialPort->write("AT+GPS=0\r\n");
         serialPort->close();
     }
+    buttons.stop();
     QTextStream out(file);
     out<<"that's all, folks\n";
     file->close();
@@ -136,5 +145,15 @@ void MainWindow::parseGPSData(const QString& rawData)
 
     parsed = data[GPGSV].split(',');
     gpsData.numOfSatelites = parsed.size()/4;
+}
+
+void MainWindow::handleButtonPush()
+{
+    qInfo("push %d", buttons.getCode());
+}
+
+void MainWindow::handleButtonLongPush()
+{
+    qInfo("long push %d", buttons.getCode());
 }
 

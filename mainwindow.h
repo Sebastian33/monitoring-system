@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QSerialPort>
 #include <QFile>
+#include "buttonsthread.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -18,11 +19,14 @@ public:
     ~MainWindow();
 private slots:
     void handleReadyRead();
+    void handleButtonPush();
+    void handleButtonLongPush();
 private:
     QSerialPort *serialPort;
     QByteArray readData;
     Ui::MainWindow *ui;
     QFile *file;
+    ButtonsThread buttons;
 
     struct GPSData
     {
