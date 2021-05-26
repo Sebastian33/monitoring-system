@@ -4,9 +4,10 @@ const char *CONSUMER = "Telemetry";
 const char *CHIP = "gpiochip0";
 const unsigned UP_LINE_NUM = 27;
 const unsigned DOWN_LINE_NUM = 26;
-
-const unsigned UP_OFFSET = 0;
-const unsigned DOWN_OFFSET = 1;
+const unsigned MENU_LINE_NUM = 23;
+const unsigned CONFIG_LINE_NUM = 22;
+const unsigned SET_LINE_NUM = 21;
+const unsigned CANCEL_LINE_NUM = 20;
 
 const unsigned INTERVAL = 10;
 const int INTERVALS_TO_PUSH = 3;
@@ -17,7 +18,11 @@ ButtonsThread::ButtonsThread(QObject *parent) : QThread(parent), code(0), thread
     chip = gpiod_chip_open_by_name(CHIP);
     upLine = gpiod_chip_get_line(chip, UP_LINE_NUM);
     downLine = gpiod_chip_get_line(chip, DOWN_LINE_NUM);
-    if(!(upLine && downLine))
+    menuLine = gpiod_chip_get_line(chip, MENU_LINE_NUM);
+    configLine = gpiod_chip_get_line(chip, CONFIG_LINE_NUM);
+    setLine = gpiod_chip_get_line(chip, SET_LINE_NUM);
+    cancelLine = gpiod_chip_get_line(chip, CANCEL_LINE_NUM);
+    if(!(upLine && downLine && menuLine && configLine && setLine && cancelLine))
     {
         qInfo("some line wasn't open");
         code|=ERROR_CODE;
@@ -25,7 +30,11 @@ ButtonsThread::ButtonsThread(QObject *parent) : QThread(parent), code(0), thread
     }
 
     if(gpiod_line_request_input(upLine, CONSUMER)|
-       gpiod_line_request_input(downLine, CONSUMER))
+       gpiod_line_request_input(downLine, CONSUMER)|
+       gpiod_line_request_input(menuLine, CONSUMER)|
+       gpiod_line_request_input(configLine, CONSUMER)|
+       gpiod_line_request_input(setLine, CONSUMER)|
+       gpiod_line_request_input(cancelLine, CONSUMER))
     {
         qInfo("line request failed");
         code|=ERROR_CODE;
@@ -50,7 +59,11 @@ void ButtonsThread::run()
     while(threadState)
     {
         currentCode = (gpiod_line_get_value(upLine)<<UP_OFFSET)|
-                (gpiod_line_get_value(downLine)<<DOWN_OFFSET);
+                (gpiod_line_get_value(downLine)<<DOWN_OFFSET)|
+                (gpiod_line_get_value(menuLine)<<MENU_OFFSET)|
+                (gpiod_line_get_value(configLine)<<CONFIG_OFFSET)|
+                (gpiod_line_get_value(setLine)<<SET_OFFSET)|
+                (gpiod_line_get_value(cancelLine)<<CANCEL_OFFSET);
         //qInfo("%d", currentCode);
         if(currentCode!=0)
         {

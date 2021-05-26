@@ -16,6 +16,7 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow(QWidget *parent = nullptr);
+    void bindCloseButton(QApplication& a);
     ~MainWindow();
 private slots:
     void handleReadyRead();
@@ -40,5 +41,8 @@ private:
     GPSData gpsData{0.0, 'X', 0.0, 'Y', 0};
 
     void parseGPSData(const QString& rawData);
+
+    void handleUpButton();
+    void handleDownButton();
 };
 #endif // MAINWINDOW_H

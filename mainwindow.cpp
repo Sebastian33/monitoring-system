@@ -37,19 +37,20 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
     , buttons(parent)
 {
-//    serialPort->setPortName("/dev/ttyS0");
-//    serialPort->setBaudRate(QSerialPort::Baud115200);
-//    if(serialPort->open(QIODevice::ReadWrite))
-//    {
-//        connect(serialPort, &QSerialPort::readyRead, this, &MainWindow::handleReadyRead);
-//        serialPort->write("AT+GPS=1\r\n");
-//        serialPort->write("AT+GPSRD=5\r\n");
-//    }
-//    else
-//    {
-//        qInfo("Couldn't open the port\n");
-//        return;
-//    }
+    serialPort->setPortName("/dev/ttyS0");
+    serialPort->setBaudRate(QSerialPort::Baud115200);
+    if(serialPort->open(QIODevice::ReadWrite))
+    {
+        connect(serialPort, &QSerialPort::readyRead, this, &MainWindow::handleReadyRead);
+        serialPort->write("AT+GPS=1\r\n");
+        serialPort->write("AT+GPSRD=5\r\n");
+    }
+    else
+    {
+        qInfo("Couldn't open the port\n");
+        return;
+    }
+
     file = new QFile("out");
     file->open(QIODevice::WriteOnly|QIODevice::Text);
 
@@ -105,7 +106,7 @@ MainWindow::~MainWindow()
     }
     buttons.stop();
     QTextStream out(file);
-    out<<"that's all, folks\n";
+    out<<"that's all, folks!1!\n";
     file->close();
     delete ui;
 }
@@ -149,7 +150,37 @@ void MainWindow::parseGPSData(const QString& rawData)
 
 void MainWindow::handleButtonPush()
 {
-    qInfo("push %d", buttons.getCode());
+    //qInfo("push %d", buttons.getCode());
+    switch(buttons.getCode())
+    {
+    case UP_CODE:
+        {
+            handleUpButton();
+            break;
+        }
+    case DOWN_CODE:
+        {
+            handleDownButton();
+            break;
+        }
+    case MENU_CODE:
+        {
+            break;
+        }
+    case CONFIG_CODE:
+        {
+            break;
+        }
+    case SET_CODE:
+        {
+            break;
+        }
+    case CANCEL_CODE:
+        {
+            break;
+        }
+    }
+
 }
 
 void MainWindow::handleButtonLongPush()
@@ -157,3 +188,23 @@ void MainWindow::handleButtonLongPush()
     qInfo("long push %d", buttons.getCode());
 }
 
+void MainWindow::bindCloseButton(QApplication& a)
+{
+    connect(ui->closeButton, &QAbstractButton::clicked, &a, &QCoreApplication::quit);
+}
+
+void MainWindow::handleUpButton()
+{
+    int idx = ui->tabWidget->currentIndex() - 1;
+    idx = idx < 0 ? ui->tabWidget->count() - 1 : idx;
+    //qInfo("up %d->%d", ui->tabWidget->currentIndex(), idx);
+    ui->tabWidget->setCurrentIndex(idx);
+}
+
+void MainWindow::handleDownButton()
+{
+    int idx = ui->tabWidget->currentIndex() + 1;
+    idx = idx==ui->tabWidget->count() ? 0 : idx;
+    //qInfo("down %d->%d", ui->tabWidget->currentIndex(), idx);
+    ui->tabWidget->setCurrentIndex(idx);
+}

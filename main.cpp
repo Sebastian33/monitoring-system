@@ -7,9 +7,10 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     MainWindow w;
-//    w.setWindowState(Qt::WindowMaximized);
+    w.bindCloseButton(a);
+    w.setWindowState(Qt::WindowMaximized);
 //    w.show();
 
-    //w.showFullScreen();
+    w.showFullScreen();
     return a.exec();
 }

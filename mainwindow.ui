@@ -6,93 +6,240 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>475</width>
     <height>600</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>8</pointsize>
+   </font>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="Latitude">
+   <widget class="Line" name="TopLine">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>57</width>
-      <height>15</height>
+      <x>0</x>
+      <y>20</y>
+      <width>801</width>
+      <height>20</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Latitude:</string>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="LatitudeVal">
+   <widget class="Line" name="line_2">
     <property name="geometry">
      <rect>
-      <x>90</x>
-      <y>10</y>
-      <width>101</width>
-      <height>16</height>
+      <x>0</x>
+      <y>520</y>
+      <width>801</width>
+      <height>20</height>
      </rect>
     </property>
-    <property name="text">
-     <string>in the</string>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="Longtitude">
+   <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>0</x>
       <y>30</y>
+      <width>471</width>
+      <height>501</height>
+     </rect>
+    </property>
+    <property name="tabPosition">
+     <enum>QTabWidget::East</enum>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
+    <widget class="QWidget" name="GPS">
+     <attribute name="title">
+      <string>Tab 1</string>
+     </attribute>
+     <widget class="QLabel" name="NumOfSatsVal">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>50</y>
+        <width>57</width>
+        <height>15</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>nowhere</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="Latitude">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>57</width>
+        <height>15</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Latitude:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="LatitudeVal">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>10</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>in the</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="Longtitude">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>30</y>
+        <width>71</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Longtitude:</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="LongtitudeVal">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>30</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>middle of</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="NumOfSats">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>50</y>
+        <width>131</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Number of satellites:</string>
+      </property>
+      <property name="scaledContents">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Page</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>Tab 2</string>
+     </attribute>
+    </widget>
+   </widget>
+   <widget class="QPushButton" name="closeButton">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>0</y>
       <width>71</width>
-      <height>16</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string>Longtitude:</string>
+     <string>Close</string>
     </property>
    </widget>
-   <widget class="QLabel" name="LongtitudeVal">
+   <widget class="QLabel" name="MenuLabel">
     <property name="geometry">
      <rect>
-      <x>90</x>
-      <y>30</y>
+      <x>0</x>
+      <y>530</y>
+      <width>111</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Menu</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="ConfigLabel">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>530</y>
+      <width>111</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Config</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="SetLabel">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>530</y>
       <width>101</width>
-      <height>16</height>
+      <height>31</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
+    </property>
     <property name="text">
-     <string>middle of</string>
+     <string>Set</string>
     </property>
    </widget>
-   <widget class="QLabel" name="NumOfSats">
+   <widget class="QLabel" name="CancelLabel">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>50</y>
-      <width>131</width>
-      <height>16</height>
+      <x>370</x>
+      <y>530</y>
+      <width>101</width>
+      <height>31</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Number of satellites:</string>
-    </property>
-    <property name="scaledContents">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="QLabel" name="NumOfSatsVal">
-    <property name="geometry">
-     <rect>
-      <x>140</x>
-      <y>50</y>
-      <width>57</width>
-      <height>15</height>
-     </rect>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+     </font>
     </property>
     <property name="text">
-     <string>nowhere</string>
+     <string>Cancel</string>
     </property>
    </widget>
   </widget>
@@ -101,8 +248,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
-     <height>20</height>
+     <width>475</width>
+     <height>19</height>
     </rect>
    </property>
   </widget>
