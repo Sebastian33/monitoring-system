@@ -10,8 +10,8 @@ const unsigned SET_LINE_NUM = 21;
 const unsigned CANCEL_LINE_NUM = 20;
 
 const unsigned INTERVAL = 10;
-const int INTERVALS_TO_PUSH = 3;
-const int INTERVALS_TO_LONG_PUSH = 150;
+const unsigned INTERVALS_TO_PUSH = 3;
+const unsigned INTERVALS_TO_LONG_PUSH = 150;
 
 ButtonsThread::ButtonsThread(QObject *parent) : QThread(parent), code(0), threadState(true)
 {
@@ -25,7 +25,7 @@ ButtonsThread::ButtonsThread(QObject *parent) : QThread(parent), code(0), thread
     if(!(upLine && downLine && menuLine && configLine && setLine && cancelLine))
     {
         qInfo("some line wasn't open");
-        code|=ERROR_CODE;
+        code=ERROR_CODE;
         return;
     }
 
@@ -37,7 +37,7 @@ ButtonsThread::ButtonsThread(QObject *parent) : QThread(parent), code(0), thread
        gpiod_line_request_input(cancelLine, CONSUMER))
     {
         qInfo("line request failed");
-        code|=ERROR_CODE;
+        code=ERROR_CODE;
         return;
     }
 }
