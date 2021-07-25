@@ -5,22 +5,22 @@
 #include <QSerialPort>
 #include <QFile>
 #include "buttonsthread.h"
+#include "GroupBoxes.h"
+#include <QWidget>
 #include <QGridLayout>
 #include <QCheckBox>
-#include <QLabel>
-#include <QGroupBox>
 #include <QMap>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-class SubWindow: public QWidget
+class LayoutMenu: public QWidget
 {
     Q_OBJECT
 public:
-    SubWindow(QWidget *parent = nullptr);
-    ~SubWindow();
+    LayoutMenu(QWidget *parent = nullptr);
+    ~LayoutMenu();
     void uncheckAll();
 
     QCheckBox *gpsCheckBox;
@@ -30,47 +30,7 @@ private:
     QGridLayout *layout;
 };
 
-class GroupBox:public QGroupBox
-{
-    Q_OBJECT
-public:
-    GroupBox(QWidget *parent = nullptr);
-    ~GroupBox();
-protected:
-    QVBoxLayout *layout;
-};
 
-class GPSBox:public GroupBox
-{
-    Q_OBJECT
-public:
-    GPSBox(QWidget *parent = nullptr);
-    ~GPSBox();
-private:
-    QLabel *latitude;
-    QLabel *longtitude;
-    QLabel *numOfSats;
-};
-
-class TmpOutsideBox:public GroupBox
-{
-    Q_OBJECT
-public:
-    TmpOutsideBox(QWidget *parent = nullptr);
-    ~TmpOutsideBox();
-private:
-    QLabel *temperature;
-};
-
-class HumidityBox:public GroupBox
-{
-    Q_OBJECT
-public:
-    HumidityBox(QWidget *parent = nullptr);
-    ~HumidityBox();
-private:
-    QLabel *humidity;
-};
 
 class MainWindow : public QMainWindow
 {
@@ -98,7 +58,7 @@ private:
     Ui::MainWindow *ui;
     QFile *file;
     ButtonsThread buttons;
-    SubWindow *layoutMenu;
+    LayoutMenu *layoutMenu;
     QVector<QGridLayout*> tabLayouts;
 
     struct GPSData

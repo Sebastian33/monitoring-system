@@ -24,7 +24,7 @@ ButtonsThread::ButtonsThread(QObject *parent) : QThread(parent), code(0), thread
     cancelLine = gpiod_chip_get_line(chip, CANCEL_LINE_NUM);
     if(!(upLine && downLine && menuLine && configLine && setLine && cancelLine))
     {
-        qInfo("some line wasn't open");
+        qInfo("some line failed to open");
         code=ERROR_CODE;
         return;
     }
