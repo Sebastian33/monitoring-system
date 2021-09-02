@@ -13,12 +13,7 @@ I2cConverter::I2cConverter(int uart)
         return;
     }
     //initial configuration
-    int tmp; /*= wiringPiI2CReadReg8(fd, GENA);
-    if((tmp & 0x80) == 0)
-    {
-        qInfo("failed to read GENA");
-        return;
-    }*/
+    int tmp;
 
     if(uart == UART1)
         tmp=0x01;
@@ -104,7 +99,7 @@ void UartThread::stop()
     threadState = false;
 }
 
-QByteArray UartThread::read()
+QByteArray UartThread::readAll()
 {
     return uart.readAll();
 }

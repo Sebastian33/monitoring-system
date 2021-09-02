@@ -8,6 +8,9 @@ const char *GNVTG = "GNVTG";
 const char *GPGSV = "GPGSV";
 const char *GNGGA = "GNGGA";
 
+const char *PBMSA = "$PBMSA";
+const char *WIMWD = "$WIMWD";
+
 bool checksum(const QString& str, unsigned char sum)
 {
     for(unsigned char c: str.toLatin1())
@@ -31,30 +34,38 @@ void processSatellites(const QString& line, QMap<QString, QString>& data)
 }
 
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , serialPort(new QSerialPort)
-    , ui(new Ui::MainWindow)
-    , buttons(parent)
-    , layoutMenu(new LayoutMenu(parent))
+MainWindow::MainWindow(QWidget *parent):
+    QMainWindow(parent),
+    serialPort0(new QSerialPort),
+    serialPort1(new UartThread(UART1, parent)),
+    ui(new Ui::MainWindow),
+    buttons(parent),
+    layoutMenu(new LayoutMenu(parent))
 {
-    serialPort->setPortName("/dev/ttyS0");
-    serialPort->setBaudRate(QSerialPort::Baud115200);
-    if(serialPort->open(QIODevice::ReadWrite))
-    {
-        connect(serialPort, &QSerialPort::readyRead, this, &MainWindow::handleReadyRead);
-        serialPort->write("AT+GPS=1\r\n");
-        serialPort->write("AT+GPSRD=5\r\n");
-    }
-    else
-    {
-        qInfo("Couldn't open the port\n");
-        return;
-    }
+    //built-in serial port config and GPS module initialization
+//    serialPort0->setPortName("/dev/ttyS0");
+//    serialPort0->setBaudRate(QSerialPort::Baud115200);
+//    if(serialPort0->open(QIODevice::ReadWrite))
+//    {
+//        connect(serialPort0, &QSerialPort::readyRead, this, &MainWindow::readSerialPort0);
+//        serialPort0->write("AT+GPS=1\r\n"); //turn GPS on
+//        serialPort0->write("AT+GPSRD=5\r\n"); //send data every 5 seconds
+//    }
+//    else
+//    {
+//        qInfo("Couldn't open the port\n");
+//        return;
+//    }
 
+    //additional serial ports config
+    connect(serialPort1, &UartThread::readyRead, this, &MainWindow::readSerialPort1);
+    serialPort1->start();
+
+    //"logging"
     file = new QFile("out");
     file->open(QIODevice::WriteOnly|QIODevice::Text);
 
+    //external buttons config
     if(buttons.getCode() & ERROR_CODE)
     {
         return;
@@ -62,8 +73,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&buttons, &ButtonsThread::push, this, &MainWindow::handleButtonPush);
     connect(&buttons, &ButtonsThread::longPush, this, &MainWindow::handleButtonLongPush);
     buttons.start();
-    ui->setupUi(this);
 
+    //ui initialization
+    ui->setupUi(this);
     QGridLayout* tmp;
     for(int i = 0; i < ui->tabWidget->count(); i++)
     {
@@ -73,20 +85,20 @@ MainWindow::MainWindow(QWidget *parent)
     }
 }
 
-void MainWindow::handleReadyRead()
+void MainWindow::readSerialPort0()
 {
-    if(readData.size()==0)
-        readData=serialPort->readAll();
+    if(buf0.size()==0)
+        buf0=serialPort0->readAll();
     else
-        readData.append(serialPort->readAll());
-    if(readData[readData.size()-1]!='\n')
+        buf0.append(serialPort0->readAll());
+    if(buf0[buf0.size()-1]!='\n')
         return;
 
-    if(qstrncmp(readData, GPSRD, qstrlen(GPSRD)) == 0)
+    if(qstrncmp(buf0, GPSRD, qstrlen(GPSRD)) == 0)
     {
-        if(!readData.contains(GNVTG)) //GNVTG is the last line
+        if(!buf0.contains(GNVTG)) //GNVTG is the last line
             return;
-        QString rawData = QString(readData).remove(0, 7); // remove +GPRSD
+        QString rawData = QString(buf0).remove(0, 7); // remove +GPRSD
         parseGPSData(rawData);
 
 //        ui->LatitudeVal->setText(QString::number(gpsData.latitude) + gpsData.latDir);
@@ -103,20 +115,55 @@ void MainWindow::handleReadyRead()
     }
     QTextStream out(file);
     out<<"***raw data***"<<endl;
-    out<<readData;
+    out<<buf0;
     out<<"**********\n\n";
-    readData.clear();
+    buf0.clear();
+}
+
+void MainWindow::readSerialPort1()
+{
+    if(buf1.size()==0)
+        buf1=serialPort1->readAll();
+    else
+        buf1.append(serialPort1->readAll());
+
+    if(buf1[buf1.size()-1]!='\n')
+        return;
+
+    QStringList rawDataLines = QString(buf1).split("\r\n");
+    buf1.clear();
+
+    QStringList splitted;
+    for(QString &line: rawDataLines)
+    {
+        QString prefix = line.left(6); //$abcde
+        if(prefix==PBMSA)
+        {
+            parseTHData(line);
+            qInfo()<<line;
+            qInfo("tmp: %f%c, %f",thData.tmp, thData.tmpUnit, thData.hum);
+        }
+        else if(prefix==WIMWD)
+        {
+            parseWData(line);
+            qInfo()<<line;
+            qInfo("wind: %i%c, %f%c", wData.direction, wData.dirType, wData.speed, wData.speedUnit);
+        }
+    }
 }
 
 MainWindow::~MainWindow()
 {
-    if(serialPort->isOpen())
+    if(serialPort0->isOpen())
     {
-        serialPort->write("AT+GPS=0\r\n");
-        serialPort->close();
+        serialPort0->write("AT+GPS=0\r\n");
+        serialPort0->close();
     }
-    delete serialPort;
+    delete serialPort0;
+    serialPort1->stop();
+    delete serialPort1;
     buttons.stop();
+
 
     for(QWidget* w: gpsMap.values())
         delete w;
@@ -124,10 +171,6 @@ MainWindow::~MainWindow()
         delete w;
     for(QWidget* w: humidityMap.values())
         delete w;
-
-//    QTextStream out(file);
-//    out<<"that's all, folks!1!\n";
-//    file->close();
 
     for(auto l: tabLayouts)
         delete l;
@@ -154,7 +197,7 @@ void MainWindow::parseGPSData(const QString& rawData)
         tmp = tmp.left(tmp.size()-3);
         if(!checksum(tmp, sum))
             continue;
-        if(tmp.startsWith(GPGSV))
+        if(tmp.startsWith(GPGSV))//there can be several GPGSV lines
             processSatellites(tmp, data);
         else
             data[tmp.left(5)] = tmp.remove(0,6);
@@ -172,9 +215,33 @@ void MainWindow::parseGPSData(const QString& rawData)
     gpsData.numOfSatelites = parsed.size()/4;
 }
 
+void MainWindow::parseTHData(const QString& rawData)
+{
+    QStringList preparsed = rawData.split(',');
+    if(preparsed.size()!=5 || preparsed[4].toLatin1()[0]!='A') //A - data is valid
+        return;
+    //checksum should be verified here but there is no checksum yet
+
+    thData.tmp = preparsed[1].toFloat();
+    thData.tmpUnit = preparsed[2].toLatin1()[0];
+    thData.hum = preparsed[3].toFloat();
+}
+
+void MainWindow::parseWData(const QString& rawData)
+{
+    QStringList preparsed = rawData.split(',');
+    if(preparsed.size()!=6 || preparsed[5].toLatin1()[0]!='A') //A - data is valid
+        return;
+    //checksum should be verified here but there is no checksum yet
+
+    wData.direction = preparsed[1].toInt();
+    wData.dirType = preparsed[2].toLatin1()[0];
+    wData.speed = preparsed[3].toFloat();
+    wData.speedUnit = preparsed[4].toLatin1()[0];
+}
+
 void MainWindow::handleButtonPush()
 {
-    //qInfo("push %d", buttons.getCode());
     switch(buttons.getCode())
     {
     case UP_CODE:
@@ -212,7 +279,7 @@ void MainWindow::handleButtonPush()
 
 void MainWindow::handleButtonLongPush()
 {
-    //qInfo("long push %d", buttons.getCode());
+    //not implemented yet
 }
 
 void MainWindow::bindCloseButton(QApplication& a)
@@ -224,7 +291,6 @@ void MainWindow::handleUpButton()
 {
     int idx = ui->tabWidget->currentIndex() - 1;
     idx = idx < 0 ? ui->tabWidget->count() - 1 : idx;
-    //qInfo("up %d->%d", ui->tabWidget->currentIndex(), idx);
     ui->tabWidget->setCurrentIndex(idx);
 }
 
@@ -232,7 +298,6 @@ void MainWindow::handleDownButton()
 {
     int idx = ui->tabWidget->currentIndex() + 1;
     idx = idx==ui->tabWidget->count() ? 0 : idx;
-    //qInfo("down %d->%d", ui->tabWidget->currentIndex(), idx);
     ui->tabWidget->setCurrentIndex(idx);
 }
 

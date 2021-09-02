@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include <QApplication>
-#include <gpiod.h>
-#include<QDebug>
+#include <QDebug>
+#include"i2cconverter.h"
 
 int main(int argc, char *argv[])
 {
@@ -9,6 +9,6 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.bindCloseButton(a);
 
-    w.showFullScreen();
+    //w.showFullScreen();
     return a.exec();
 }

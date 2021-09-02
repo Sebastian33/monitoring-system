@@ -66,7 +66,7 @@ private:
 public:
     UartThread(int uartNum, QObject* parent=nullptr);
     void stop();
-    QByteArray read();
+    QByteArray readAll();
 protected:
     void run() override;
 signals:
