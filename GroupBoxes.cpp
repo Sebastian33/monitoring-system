@@ -62,3 +62,21 @@ HumidityBox::~HumidityBox()
 {
     delete humidity;
 }
+
+WindBox::WindBox(QWidget* parent):
+    GroupBox(parent),
+    direction(new QLabel),
+    speed(new QLabel)
+{
+    setTitle("Wind");
+    direction->setText("kuda-to tuda");
+    speed->setText("15 popugayev/sec");
+    layout->addWidget(direction);
+    layout->addWidget(speed);
+}
+
+WindBox::~WindBox()
+{
+    delete direction;
+    delete speed;
+}

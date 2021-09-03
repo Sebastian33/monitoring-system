@@ -46,4 +46,15 @@ private:
     QLabel *humidity;
 };
 
+class WindBox: public GroupBox
+{
+    Q_OBJECT
+public:
+    WindBox(QWidget* parent = nullptr);
+    ~WindBox();
+private:
+    QLabel *direction;
+    QLabel *speed;
+};
+
 #endif // GROUPBOXES_H

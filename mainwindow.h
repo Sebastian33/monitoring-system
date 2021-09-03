@@ -27,6 +27,7 @@ public:
     QCheckBox *gpsCheckBox;
     QCheckBox *tmpOutsideCheckBox;
     QCheckBox *humidityCheckBox;
+    QCheckBox *windCheckBox;
 private:
     QGridLayout *layout;
 };
@@ -46,12 +47,13 @@ public:
     {
         GPS,
         TMP_OUTSIDE,
-        HUMIDITY
+        HUMIDITY,
+        WIND
     };
 
 private slots:
-    void readSerialPort0();
-    void readSerialPort1();
+    void readSerialPort0AndUpdate();
+    void readSerialPort1AndUpdate();
     void handleButtonPush();
     void handleButtonLongPush();
 private:
@@ -92,11 +94,12 @@ private:
         float speed;
         char speedUnit;
     };
-    WData wData;
+    WData wData{0, 'Z', -1.0, 'P'};
 
     QMap<int, GPSBox *> gpsMap;
     QMap<int, TmpOutsideBox *> tmpOutMap;
     QMap<int, HumidityBox *> humidityMap;
+    QMap<int, WindBox *> windMap;
     QMap<BoxType, QWidget*> currentTabWidgets;
 
     void parseGPSData(const QString& rawData);

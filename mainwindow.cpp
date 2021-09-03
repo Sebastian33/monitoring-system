@@ -43,22 +43,22 @@ MainWindow::MainWindow(QWidget *parent):
     layoutMenu(new LayoutMenu(parent))
 {
     //built-in serial port config and GPS module initialization
-//    serialPort0->setPortName("/dev/ttyS0");
-//    serialPort0->setBaudRate(QSerialPort::Baud115200);
-//    if(serialPort0->open(QIODevice::ReadWrite))
-//    {
-//        connect(serialPort0, &QSerialPort::readyRead, this, &MainWindow::readSerialPort0);
-//        serialPort0->write("AT+GPS=1\r\n"); //turn GPS on
-//        serialPort0->write("AT+GPSRD=5\r\n"); //send data every 5 seconds
-//    }
-//    else
-//    {
-//        qInfo("Couldn't open the port\n");
-//        return;
-//    }
+    serialPort0->setPortName("/dev/ttyS0");
+    serialPort0->setBaudRate(QSerialPort::Baud115200);
+    if(serialPort0->open(QIODevice::ReadWrite))
+    {
+        connect(serialPort0, &QSerialPort::readyRead, this, &MainWindow::readSerialPort0AndUpdate);
+        serialPort0->write("AT+GPS=1\r\n"); //turn GPS on
+        serialPort0->write("AT+GPSRD=5\r\n"); //send data every 5 seconds
+    }
+    else
+    {
+        qInfo("Couldn't open the port\n");
+        return;
+    }
 
     //additional serial ports config
-    connect(serialPort1, &UartThread::readyRead, this, &MainWindow::readSerialPort1);
+    connect(serialPort1, &UartThread::readyRead, this, &MainWindow::readSerialPort1AndUpdate);
     serialPort1->start();
 
     //"logging"
@@ -85,7 +85,7 @@ MainWindow::MainWindow(QWidget *parent):
     }
 }
 
-void MainWindow::readSerialPort0()
+void MainWindow::readSerialPort0AndUpdate()
 {
     if(buf0.size()==0)
         buf0=serialPort0->readAll();
@@ -120,7 +120,7 @@ void MainWindow::readSerialPort0()
     buf0.clear();
 }
 
-void MainWindow::readSerialPort1()
+void MainWindow::readSerialPort1AndUpdate()
 {
     if(buf1.size()==0)
         buf1=serialPort1->readAll();
@@ -170,6 +170,8 @@ MainWindow::~MainWindow()
     for(QWidget* w: tmpOutMap.values())
         delete w;
     for(QWidget* w: humidityMap.values())
+        delete w;
+    for(QWidget* w: windMap.values())
         delete w;
 
     for(auto l: tabLayouts)
@@ -324,6 +326,11 @@ void MainWindow::handleMenuButton()
         layoutMenu->humidityCheckBox->setChecked(true);
         currentTabWidgets.insert(HUMIDITY, humidityMap[currentTab]);
     }
+    if(windMap.contains(currentTab))
+    {
+        layoutMenu->windCheckBox->setChecked(true);
+        currentTabWidgets.insert(WIND, windMap[currentTab]);
+    }
     layoutMenu->show();
 }
 
@@ -332,14 +339,14 @@ void MainWindow::handleSetButton()
     QTextStream out(file);
     if(layoutMenu->isHidden())
     {
-        out<<"hidden "<<layoutMenu->isHidden()<<endl;
+        //out<<"hidden "<<layoutMenu->isHidden()<<endl;
         return;
     }
     int currentTab = ui->tabWidget->currentIndex();
     QGridLayout* lt = dynamic_cast<QGridLayout*>(ui->tabWidget->widget(currentTab)->layout());
     for(QWidget* gb: currentTabWidgets.values())
     {
-        out<<"removing "<<gb<<endl;
+        //out<<"removing "<<gb<<endl;
         lt->removeWidget(gb);
         gb->close();
     }
