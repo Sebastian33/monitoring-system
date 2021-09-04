@@ -10,7 +10,8 @@
 #include <QGridLayout>
 #include <QCheckBox>
 #include <QMap>
-#include"i2cconverter.h"
+#include "i2cconverter.h"
+#include <QMutex>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -69,31 +70,12 @@ private:
     QByteArray buf0;
     QByteArray buf1;
 
-    struct GPSData
-    {
-        float latitude;//широта
-        char latDir;
-        float longtitude;//долгота
-        char longDir;
-        int numOfSatelites;
-    };
+    QMutex mtx0;
+    QMutex mtx1;
+
+
     GPSData gpsData{0.0, 'X', 0.0, 'Y', 0};
-
-    struct THData // tmp and humidity
-    {
-        float tmp;
-        char tmpUnit;
-        float hum;
-    };
     THData thData{0.0, 'C', 0.0};
-
-    struct WData
-    {
-        int direction;
-        char dirType;
-        float speed;
-        char speedUnit;
-    };
     WData wData{0, 'Z', -1.0, 'P'};
 
     QMap<int, GPSBox *> gpsMap;
@@ -110,5 +92,10 @@ private:
     void handleDownButton();
     void handleMenuButton();
     void handleSetButton();
+
+    void updateUITmpOut();
+    void updateUIHmd();
+    void updateUIWind();
+    void updateUIGPS();
 };
 #endif // MAINWINDOW_H

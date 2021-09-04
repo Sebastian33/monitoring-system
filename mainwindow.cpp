@@ -100,10 +100,7 @@ void MainWindow::readSerialPort0AndUpdate()
             return;
         QString rawData = QString(buf0).remove(0, 7); // remove +GPRSD
         parseGPSData(rawData);
-
-//        ui->LatitudeVal->setText(QString::number(gpsData.latitude) + gpsData.latDir);
-//        ui->LongtitudeVal->setText(QString::number(gpsData.longtitude) + gpsData.longDir);
-//        ui->NumOfSatsVal->setText(QString::number(gpsData.numOfSatelites));
+        updateUIGPS();
 
 //        qInfo("latitude: %f %c", gpsData.latitude, gpsData.latDir );
 //        qInfo("longtitude: %f %c", gpsData.longtitude, gpsData.longDir );
@@ -113,10 +110,10 @@ void MainWindow::readSerialPort0AndUpdate()
 //        out<< "longtitude: "<<gpsData.longtitude<<gpsData.longDir<<endl;
 //        out<<"number of satellites: " <<gpsData.numOfSatelites<<endl;
     }
-    QTextStream out(file);
-    out<<"***raw data***"<<endl;
-    out<<buf0;
-    out<<"**********\n\n";
+//    QTextStream out(file);
+//    out<<"***raw data***"<<endl;
+//    out<<buf0;
+//    out<<"**********\n\n";
     buf0.clear();
 }
 
@@ -140,14 +137,13 @@ void MainWindow::readSerialPort1AndUpdate()
         if(prefix==PBMSA)
         {
             parseTHData(line);
-            qInfo()<<line;
-            qInfo("tmp: %f%c, %f",thData.tmp, thData.tmpUnit, thData.hum);
+            updateUITmpOut();
+            updateUIHmd();
         }
         else if(prefix==WIMWD)
         {
             parseWData(line);
-            qInfo()<<line;
-            qInfo("wind: %i%c, %f%c", wData.direction, wData.dirType, wData.speed, wData.speedUnit);
+            updateUIWind();
         }
     }
 }
@@ -204,8 +200,8 @@ void MainWindow::parseGPSData(const QString& rawData)
         else
             data[tmp.left(5)] = tmp.remove(0,6);
     }
-    if(data.contains(GPGSV))
-        out<<"sats: "<< data[GPGSV]<<endl;
+//    if(data.contains(GPGSV))
+//        out<<"sats: "<< data[GPGSV]<<endl;
 
     QStringList parsed = data[GNGGA].split(',');
     gpsData.latitude = parsed[1].toFloat();
@@ -263,6 +259,7 @@ void MainWindow::handleButtonPush()
         }
     case CONFIG_CODE:
         {
+            //not implemented yet
             break;
         }
     case SET_CODE:
@@ -336,7 +333,7 @@ void MainWindow::handleMenuButton()
 
 void MainWindow::handleSetButton()
 {
-    QTextStream out(file);
+    //QTextStream out(file);
     if(layoutMenu->isHidden())
     {
         //out<<"hidden "<<layoutMenu->isHidden()<<endl;
@@ -353,45 +350,73 @@ void MainWindow::handleSetButton()
     QWidget* widget;
     if(currentTabWidgets.contains(GPS) && (!layoutMenu->gpsCheckBox->isChecked()))
     {
-        gpsMap.remove(currentTab);
         widget = currentTabWidgets[GPS];
         currentTabWidgets.remove(GPS);
+        mtx0.lock();
+        gpsMap.remove(currentTab);
         delete widget;
+        mtx0.unlock();
     }
     else if((!currentTabWidgets.contains(GPS)) && layoutMenu->gpsCheckBox->isChecked())
     {
+        mtx0.lock();
         gpsMap.insert(currentTab, new GPSBox);
+        mtx0.unlock();
         currentTabWidgets.insert(GPS, gpsMap[currentTab]);
     }
     if(currentTabWidgets.contains(TMP_OUTSIDE) && (!layoutMenu->tmpOutsideCheckBox->isChecked()))
     {
-        tmpOutMap.remove(currentTab);
         widget = currentTabWidgets[TMP_OUTSIDE];
         currentTabWidgets.remove(TMP_OUTSIDE);
+        mtx1.lock();
+        tmpOutMap.remove(currentTab);
         delete widget;
+        mtx1.unlock();
     }
     else if((!currentTabWidgets.contains(TMP_OUTSIDE)) && layoutMenu->tmpOutsideCheckBox->isChecked())
     {
+        mtx1.lock();
         tmpOutMap.insert(currentTab, new TmpOutsideBox);
+        mtx1.unlock();
         currentTabWidgets.insert(TMP_OUTSIDE, tmpOutMap[currentTab]);
     }
     if(currentTabWidgets.contains(HUMIDITY) && (!layoutMenu->humidityCheckBox->isChecked()))
     {
-        humidityMap.remove(currentTab);
         widget = currentTabWidgets[HUMIDITY];
         currentTabWidgets.remove(HUMIDITY);
+        mtx1.lock();
+        humidityMap.remove(currentTab);
         delete widget;
+        mtx1.unlock();
     }
     else if((!currentTabWidgets.contains(HUMIDITY)) && layoutMenu->humidityCheckBox->isChecked())
     {
+        mtx1.lock();
         humidityMap.insert(currentTab, new HumidityBox);
+        mtx1.unlock();
         currentTabWidgets.insert(HUMIDITY, humidityMap[currentTab]);
+    }
+    if(currentTabWidgets.contains(WIND) && (!layoutMenu->windCheckBox->isChecked()))
+    {
+        widget = currentTabWidgets[WIND];
+        currentTabWidgets.remove(WIND);
+        mtx1.lock();
+        windMap.remove(currentTab);
+        delete widget;
+        mtx1.unlock();
+    }
+    else if((!currentTabWidgets.contains(WIND)) && layoutMenu->windCheckBox->isChecked())
+    {
+        mtx1.lock();
+        windMap.insert(currentTab, new WindBox);
+        mtx1.unlock();
+        currentTabWidgets.insert(WIND, windMap[currentTab]);
     }
     QList<QWidget*> tmp = currentTabWidgets.values();
     int i=0;
     while(i<4 && i<tmp.size())
     {
-        out<<"adding "<<tmp[i]<<endl;
+        //out<<"adding "<<tmp[i]<<endl;
         lt->addWidget(tmp[i], (i>>1)&1, i&1);
         tmp[i]->show();
         i++;
@@ -399,11 +424,53 @@ void MainWindow::handleSetButton()
     layoutMenu->hide();
 }
 
+void MainWindow::updateUIGPS()
+{
+    mtx0.lock();
+    for(GPSBox* b: gpsMap.values())
+    {
+       b->update(gpsData);
+    }
+    mtx0.unlock();
+}
+
+void MainWindow::updateUIWind()
+{
+    mtx1.lock();
+    for(WindBox* b: windMap.values())
+    {
+       b->update(wData);
+    }
+    mtx1.unlock();
+}
+
+void MainWindow::updateUIHmd()
+{
+    mtx1.lock();
+    for(HumidityBox* b: humidityMap.values())
+    {
+       b->update(thData);
+    }
+    mtx1.unlock();
+}
+
+void MainWindow::updateUITmpOut()
+{
+    mtx1.lock();
+    for(TmpOutsideBox* b: tmpOutMap.values())
+    {
+       b->update(thData);
+    }
+    mtx1.unlock();
+}
+
+
 LayoutMenu::LayoutMenu(QWidget *parent):
     QWidget(parent),
     gpsCheckBox(new QCheckBox()),
     tmpOutsideCheckBox(new QCheckBox()),
     humidityCheckBox(new QCheckBox()),
+    windCheckBox(new QCheckBox),
     layout(new QGridLayout())
 {
     setWindowFlag(Qt::WindowType::SubWindow);
@@ -411,9 +478,11 @@ LayoutMenu::LayoutMenu(QWidget *parent):
     gpsCheckBox->setText("GPS");
     tmpOutsideCheckBox->setText("Temperature outside");
     humidityCheckBox->setText("Humidity");
+    windCheckBox->setText("Wind");
     layout->addWidget(gpsCheckBox, 0, 0);
     layout->addWidget(tmpOutsideCheckBox, 0, 1);
     layout->addWidget(humidityCheckBox, 1, 0);
+    layout->addWidget(windCheckBox, 1, 1);
 }
 
 LayoutMenu::~LayoutMenu()
@@ -421,6 +490,7 @@ LayoutMenu::~LayoutMenu()
     delete gpsCheckBox;
     delete tmpOutsideCheckBox;
     delete humidityCheckBox;
+    delete windCheckBox;
     delete layout;
 }
 
@@ -429,4 +499,5 @@ void LayoutMenu::uncheckAll()
     gpsCheckBox->setChecked(false);
     tmpOutsideCheckBox->setChecked(false);
     humidityCheckBox->setChecked(false);
+    windCheckBox->setChecked(false);
 }

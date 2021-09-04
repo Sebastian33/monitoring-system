@@ -1,4 +1,11 @@
 #include "GroupBoxes.h"
+const QString LAT = "Latitude: %1%2";
+const QString LONG = "Longtitude: %1%2";
+const QString SATS = "Satellites: %1";
+const QString TMPOUT = "Tmp outside: %1%2";
+const QString HUM = "Humidity: %1";
+const QString WD = "Direction: %1 %2";
+const QString WS = "Speed: %1 %2";
 
 GroupBox::GroupBox(QWidget *parent):
     QGroupBox(parent),
@@ -35,6 +42,13 @@ GPSBox::~GPSBox()
     delete numOfSats;
 }
 
+void GPSBox::update(const GPSData& data)
+{
+    latitude->setText(LAT.arg(data.latitude).arg(data.latDir));
+    longtitude->setText(LONG.arg(data.longtitude).arg(data.longDir));
+    numOfSats->setText(SATS.arg(data.numOfSatelites));
+}
+
 TmpOutsideBox::TmpOutsideBox(QWidget* parent):
     GroupBox(parent),
     temperature(new QLabel)
@@ -49,6 +63,11 @@ TmpOutsideBox::~TmpOutsideBox()
     delete temperature;
 }
 
+void TmpOutsideBox::update(const THData& data)
+{
+    temperature->setText(TMPOUT.arg(data.tmp).arg(data.tmpUnit));
+}
+
 HumidityBox::HumidityBox(QWidget* parent):
     GroupBox(parent),
     humidity(new QLabel)
@@ -61,6 +80,11 @@ HumidityBox::HumidityBox(QWidget* parent):
 HumidityBox::~HumidityBox()
 {
     delete humidity;
+}
+
+void HumidityBox::update(const THData& data)
+{
+    humidity->setText(HUM.arg(data.hum));
 }
 
 WindBox::WindBox(QWidget* parent):
@@ -79,4 +103,10 @@ WindBox::~WindBox()
 {
     delete direction;
     delete speed;
+}
+
+void WindBox::update(const WData& data)
+{
+    direction->setText(WD.arg(data.direction).arg(data.dirType));
+    speed->setText(WS.arg(data.speed).arg(data.speedUnit));
 }

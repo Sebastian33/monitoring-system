@@ -9,6 +9,6 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.bindCloseButton(a);
 
-    //w.showFullScreen();
+    w.showFullScreen();
     return a.exec();
 }
